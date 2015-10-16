@@ -29,12 +29,19 @@ if (Meteor.isClient) {
       // Get value from form element
       var text = event.target.text.value;
  
+      var username = Meteor.user().username;
+
+      // Facebook user
+      if (Meteor.user().profile) {
+        username = Meteor.user().profile.name;
+      }
+
       // Insert a task into the collection
       Tasks.insert({
         text: text,
         createdAt: new Date(),            // current time
         owner: Meteor.userId(),           // _id of logged in user
-        username: Meteor.user().username  // username of logged in user
+        username: username                // username of logged in user
       });
  
       // Clear form

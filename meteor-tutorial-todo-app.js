@@ -29,6 +29,39 @@ if (Meteor.isClient) {
       // Get value from form element
       var text = event.target.text.value;
  
+      // Insert a task into the collection
+      Meteor.call("addTask", text);
+ 
+      // Clear form
+      event.target.text.value = "";
+    },
+    "change .hide-completed input": function (event) {
+      Session.set("hideCompleted", event.target.checked);
+    }
+  });
+
+  Template.task.events({
+    "click .toggle-checked": function () {
+      // Set the checked property to the opposite of its current value
+      Meteor.call("setChecked", this._id, ! this.checked);
+    },
+    "click .delete": function () {
+      Meteor.call("deleteTask", this._id);
+    }
+  });
+
+  Accounts.ui.config({
+    passwordSignupFields: "USERNAME_ONLY"
+  });
+}
+
+Meteor.methods({
+    addTask: function (text) {
+      // Make sure the user is logged in before inserting a task
+      if (! Meteor.userId()) {
+        throw new Meteor.Error("not-authorized");
+      }
+
       var username = Meteor.user().username;
 
       // Facebook user
@@ -43,28 +76,13 @@ if (Meteor.isClient) {
         owner: Meteor.userId(),           // _id of logged in user
         username: username                // username of logged in user
       });
- 
-      // Clear form
-      event.target.text.value = "";
     },
-    "change .hide-completed input": function (event) {
-      Session.set("hideCompleted", event.target.checked);
-    }
-  });
 
-  Template.task.events({
-    "click .toggle-checked": function () {
-      // Set the checked property to the opposite of its current value
-      Tasks.update(this._id, {
-        $set: {checked: ! this.checked}
-      });
+    deleteTask: function (taskId) {
+      Tasks.remove(taskId);
     },
-    "click .delete": function () {
-      Tasks.remove(this._id);
-    }
-  });
 
-  Accounts.ui.config({
-    passwordSignupFields: "USERNAME_ONLY"
-  });
-}
+    setChecked: function (taskId, setChecked) {
+      Tasks.update(taskId, { $set: { checked: setChecked } });
+    }
+});
